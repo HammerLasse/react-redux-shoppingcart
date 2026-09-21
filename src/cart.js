@@ -1,91 +1,55 @@
-import { createStore } from "redux";
-
-const ADD_TO_CART = "cart/addToCart";
-const REMOVE_ONE = "cart/removeOne";
-const CLEAR_CART = "cart/clearCart";
-
-export function addToCart(product) {
-  return {
-    type: ADD_TO_CART,
-    payload: product,
-  };
-}
-
-export function removeOne(productId) {
-  return {
-    type: REMOVE_ONE,
-    payload: productId,
-  };
-}
-
-export function clearCart() {
-  return {
-    type: CLEAR_CART,
-  };
-}
+import { configureStore, createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   items: [],
 };
-function cartReducer(state = initialState, action) {
-  switch (action.type) {
-    case ADD_TO_CART: {
-      const existingItem = state.items.find(
-        (item) => item.id === action.payload.id,
-      );
+
+const cartSlice = createSlice({
+  name: "cart",
+  initialState,
+
+  reducers: {
+    addToCart: (state, action) => {
+      const product = action.payload;
+
+      const existingItem = state.items.find((item) => item.id === product.id);
 
       if (existingItem) {
-        return {
-          ...state,
-          items: state.items.map((item) =>
-            item.id === action.payload.id
-              ? { ...item, quantity: item.quantity + 1 }
-              : item,
-          ),
-        };
+        existingItem.quantity += 1;
+      } else {
+        state.items.push({
+          ...product,
+          quantity: 1,
+        });
       }
+    },
 
-      return {
-        ...state,
-        items: [...state.items, { ...action.payload, quantity: 1 }],
-      };
-    }
+    removeOne: (state, action) => {
+      const productId = action.payload;
 
-    case REMOVE_ONE: {
-      const existingItem = state.items.find(
-        (item) => item.id === action.payload,
-      );
+      const existingItem = state.items.find((item) => item.id === productId);
 
       if (!existingItem) {
-        return state;
+        return;
       }
 
-      if (existingItem.quantity === 1) {
-        return {
-          ...state,
-          items: state.items.filter((item) => item.id !== action.payload),
-        };
+      if (existingItem.quantity > 1) {
+        existingItem.quantity -= 1;
+      } else {
+        state.items = state.items.filter((item) => item.id !== productId);
       }
+    },
 
-      return {
-        ...state,
-        items: state.items.map((item) =>
-          item.id === action.payload
-            ? { ...item, quantity: item.quantity - 1 }
-            : item,
-        ),
-      };
-    }
+    clearCart: (state) => {
+      state.items = [];
+    },
+  },
+});
 
-    case CLEAR_CART:
-      return {
-        ...state,
-        items: [],
-      };
+export const { addToCart, removeOne, clearCart } = cartSlice.actions;
 
-    default:
-      return state;
-  }
-}
-
-export const store = createStore(cartReducer);
+export const store = configureStore({
+  reducer: {
+    cart: cartSlice.reducer,
+  },
+});

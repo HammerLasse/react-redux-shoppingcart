@@ -5,7 +5,7 @@ import { products } from "./products";
 function App() {
   const dispatch = useDispatch();
 
-  const cartItems = useSelector((state) => state.items);
+  const cartItems = useSelector((state) => state.cart.items);
 
   return (
     <main>
